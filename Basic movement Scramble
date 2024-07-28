@@ -21,7 +21,7 @@ local function createWaypoints()
 		waypoint.Size = Vector3.new(1, 1, 1)
 		waypoint.Anchored = true
 		waypoint.CanCollide = false
-		waypoint.Transparency = 0 -- makes the waypoint parts invisible
+		waypoint.Transparency = 1 -- makes the waypoint parts invisible
 		waypoint.Parent = workspace
 		table.insert(waypoints, waypoint)
 	end
