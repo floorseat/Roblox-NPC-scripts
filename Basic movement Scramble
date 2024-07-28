@@ -1,0 +1,82 @@
+-- MADE BY doompadgy13 ON ROBLOX AND floorseat ON DISCORD, DM IF YOU ENCOUNTER ANY ISSUES
+-- This script, scrambles all the waypoints within the radius, instead of having them all in a circle
+
+
+local npc = script.Parent
+local pathfindingService = game:GetService("PathfindingService")
+local waypoints = {} -- where the waypoints are stored
+
+local function createWaypoints()
+	local numWaypoints = 15 -- adjust this for the number of waypoints
+	local radius = 50 -- adjust this value to change the distance within which waypoints are scattered
+
+	for i = 1, numWaypoints do
+		local angle = math.random() * 2 * math.pi
+		local distance = math.random() * radius
+		local x = npc.HumanoidRootPart.Position.X + distance * math.cos(angle)
+		local z = npc.HumanoidRootPart.Position.Z + distance * math.sin(angle)
+		local waypoint = Instance.new("Part")
+		waypoint.Name = "Waypoint" .. i
+		waypoint.Position = Vector3.new(x, npc.HumanoidRootPart.Position.Y, z)
+		waypoint.Size = Vector3.new(1, 1, 1)
+		waypoint.Anchored = true
+		waypoint.CanCollide = false
+		waypoint.Transparency = 0 -- makes the waypoint parts invisible
+		waypoint.Parent = workspace
+		table.insert(waypoints, waypoint)
+	end
+end
+
+-- code to move npc to a specific waypoint part
+local function moveTo(waypoint)
+	local humanoid = npc:FindFirstChildOfClass("Humanoid")
+	local humanoidRootPart = npc:FindFirstChild("HumanoidRootPart")
+
+	if humanoid and humanoidRootPart then
+		print("Moving to waypoint:", waypoint.Name)
+
+		local path = pathfindingService:CreatePath({
+			AgentRadius = 2,
+			AgentHeight = 5,
+			AgentCanJump = true,
+			AgentJumpHeight = 7,
+			AgentMaxSlope = 45
+		})
+		path:ComputeAsync(humanoidRootPart.Position, waypoint.Position)
+		local waypoints = path:GetWaypoints()
+
+		for _, waypoint in ipairs(waypoints) do
+			if waypoint.Action == Enum.PathWaypointAction.Jump then
+				humanoid:MoveTo(waypoint.Position)
+				humanoid.Jump = true
+			else
+				humanoid:MoveTo(waypoint.Position)
+			end
+			humanoid.MoveToFinished:Wait(1)
+		end
+
+		print("Reached waypoint:", waypoint.Name)
+	else
+		warn("Humanoid or HumanoidRootPart not found in NPC")
+	end
+end
+
+-- loop to move the npc/rig to waypoints
+local function patrol()
+	while true do
+		if #waypoints > 0 then
+			local randomWaypoint = waypoints[math.random(1, #waypoints)]
+			moveTo(randomWaypoint)
+			task.wait(2)
+		else
+			warn("No waypoints found")
+			task.wait(5)
+		end
+	end
+end
+
+if #waypoints == 0 then
+	createWaypoints()
+end
+
+patrol()
